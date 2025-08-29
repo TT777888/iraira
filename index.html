@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>みんなのイライラボタン</title>
+  <link rel="stylesheet" href="stylesheet.css">
+</head>
+<body>
+  <div class="container">
+    <h1>みんなの <span class="highlight">イライラ</span> ボタン</h1>
+
+    <div class="status">
+      <p>累計: <span id="totalCount">0</span> 回</p>
+      <p>あなたの今日: <span id="todayCount">0</span> 回</p>
+    </div>
+
+    <button id="irairaButton">イライラ!! を放出</button>
+    <p class="note">※ 0.8 秒に 1 回だけ反応します</p>
+  </div>
+
+  <script>
+    const totalCountEl = document.getElementById("totalCount");
+    const todayCountEl = document.getElementById("todayCount");
+    const button = document.getElementById("irairaButton");
+
+    // LocalStorageキー
+    const TOTAL_KEY = "iraira_total";
+    const TODAY_KEY = "iraira_today_" + new Date().toISOString().slice(0,10);
+
+    // 初期化
+    let total = Number(localStorage.getItem(TOTAL_KEY) || 0);
+    let today = Number(localStorage.getItem(TODAY_KEY) || 0);
+    totalCountEl.textContent = total;
+    todayCountEl.textContent = today;
+
+    let cooldown = false;
+    button.addEventListener("click", () => {
+      if (cooldown) return;
+      cooldown = true;
+      setTimeout(() => cooldown = false, 800);
+
+      total++;
+      today++;
+
+      totalCountEl.textContent = total;
+      todayCountEl.textContent = today;
+
+      localStorage.setItem(TOTAL_KEY, total);
+      localStorage.setItem(TODAY_KEY, today);
+
+      // アニメーション
+      button.classList.add("pressed");
+      setTimeout(() => button.classList.remove("pressed"), 300);
+    });
+  </script>
+</body>
+</html>
