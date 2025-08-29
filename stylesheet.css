@@ -1,0 +1,55 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(to bottom, #fff, #f3f4f6);
+  color: #333;
+  text-align: center;
+  margin: 0;
+  padding: 2em;
+}
+
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+h1 {
+  font-size: 2em;
+}
+
+.highlight {
+  color: #ec4899;
+  font-weight: bold;
+}
+
+.status {
+  margin: 1.5em 0;
+  font-size: 1.2em;
+}
+
+#irairaButton {
+  background: #ec4899;
+  color: white;
+  border: none;
+  padding: 1em 2em;
+  font-size: 1.5em;
+  font-weight: bold;
+  border-radius: 1em;
+  cursor: pointer;
+  box-shadow: 0 5px 15px rgba(236,72,153,0.4);
+  transition: transform 0.1s, box-shadow 0.2s;
+}
+
+#irairaButton:hover {
+  box-shadow: 0 8px 20px rgba(236,72,153,0.5);
+}
+
+#irairaButton.pressed {
+  transform: scale(0.95);
+  box-shadow: 0 4px 10px rgba(236,72,153,0.3);
+}
+
+.note {
+  font-size: 0.9em;
+  color: #666;
+  margin-top: 1em;
+}
