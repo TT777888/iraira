@@ -65,10 +65,10 @@ h1{
 .vessel{
   width: min(84vw, 520px);
   height: auto;
-  /* 無限拡大/縮小対応。JS から --v-scale を更新 */
+  /* 無限拡大/縮小対応。JSから--v-scaleを更新 */
   transform: scale(var(--v-scale,1));
   transform-origin: center bottom;
-  transition: transform .18s ease-out;
+  transition: transform .15s ease-out;
   will-change: transform;
 }
 .v-body{
@@ -89,4 +89,50 @@ h1{
   display:grid;
   grid-template-columns: 1fr;
   gap:12px;
-  mar
+  margin: 12px 0 6px;
+}
+@media (min-width: 560px){
+  .buttons{ grid-template-columns: 1fr 1fr; }
+}
+
+/* ボタン */
+.btn{
+  width:100%;
+  border:0;
+  border-radius: clamp(14px, 3.8vw, 18px);
+  padding: clamp(12px, 3.8vw, 18px) clamp(16px, 4.5vw, 22px);
+  font-weight: 800;
+  font-size: clamp(16px, 4.2vw, 20px);
+  color:#fff;
+  cursor:pointer;
+  box-shadow: 0 8px 18px rgba(0,0,0,.08);
+  transition: transform .06s ease, box-shadow .2s ease, filter .2s ease;
+  will-change: transform;
+  touch-action: manipulation;
+}
+.btn:active{ transform: scale(.97); }
+.btn-pink{ background: var(--pink); }
+.btn-blue{ background: var(--blue); }
+
+/* アニメ表現 */
+.pressed{ filter: brightness(1.05); box-shadow: 0 10px 22px rgba(0,0,0,.12); }
+.vessel-bounce{ animation: vb 180ms ease-out; }
+@keyframes vb{
+  0%{ transform: scale(var(--v-scale,1)) translateY(0); }
+  35%{ transform: scale(calc(var(--v-scale,1)*1.04)) translateY(-2px); }
+  100%{ transform: scale(var(--v-scale,1)) translateY(0); }
+}
+
+/* 備考 */
+.note{
+  text-align:center;
+  color:var(--muted);
+  font-size: clamp(12px, 3.4vw, 14px);
+  margin: 8px 0 0;
+}
+
+/* 動きが苦手なユーザー向け */
+@media (prefers-reduced-motion: reduce){
+  .btn, .vessel{ transition: none !important; animation: none !important; }
+}
+
