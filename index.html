@@ -15,83 +15,65 @@
       <p>あなたの今日: <span id="todayCount">0</span> 回</p>
     </div>
 
-    <!-- 器（SVG） -->
+    <!-- 器 -->
     <div class="vessel-wrap" aria-hidden="true">
-      <svg class="vessel" viewBox="0 0 200 140" role="img" aria-label="器のイラスト">
-        <!-- 影 -->
+      <svg class="vessel" viewBox="0 0 200 140">
         <ellipse cx="100" cy="130" rx="70" ry="8" class="v-shadow"></ellipse>
-        <!-- 器本体 -->
         <path class="v-body"
-          d="M20,40
-             Q100,20 180,40
-             Q170,95 100,120
-             Q30,95 20,40 Z" />
-        <!-- 縁のハイライト -->
-        <path class="v-rim"
-          d="M22,42
-             Q100,24 178,42"
-          />
+          d="M20,40 Q100,20 180,40 Q170,95 100,120 Q30,95 20,40 Z" />
+        <path class="v-rim" d="M22,42 Q100,24 178,42" />
       </svg>
     </div>
 
     <div class="buttons">
-      <button id="irairaButton" class="btn btn-pink" aria-label="イライラを放出">イライラ!! を放出</button>
-      <button id="calmButton" class="btn btn-blue" aria-label="イライラしない">イライラしない</button>
+      <button id="irairaButton" class="btn btn-pink">イライラ!!</button>
+      <button id="calmButton" class="btn btn-blue">イライラしない</button>
     </div>
 
-    <p class="note">※ 0.8 秒に 1 回だけ反応します（誤タップ防止）</p>
+    <p class="note">※ 0.1 秒に 1 回だけ反応します</p>
   </div>
 
   <script>
-    // 要素取得
     const totalCountEl = document.getElementById("totalCount");
     const todayCountEl = document.getElementById("todayCount");
     const irairaBtn = document.getElementById("irairaButton");
     const calmBtn = document.getElementById("calmButton");
     const vessel = document.querySelector(".vessel");
 
-    // LocalStorageキー
     const TOTAL_KEY = "iraira_total";
     const TODAY_KEY = "iraira_today_" + new Date().toISOString().slice(0,10);
     const VESSEL_KEY = "iraira_vessel_scale";
 
-    // 初期値読み込み
     let total = Number(localStorage.getItem(TOTAL_KEY) || 0);
     let today = Number(localStorage.getItem(TODAY_KEY) || 0);
-    let vesselScale = Number(localStorage.getItem(VESSEL_KEY) || 1); // 0.6〜2.0でクランプ
+    let vesselScale = Number(localStorage.getItem(VESSEL_KEY) || 1);
 
-    // 表示反映
     const updateCounters = () => {
       totalCountEl.textContent = total;
       todayCountEl.textContent = today;
     };
     updateCounters();
 
-    // 器のスケール反映
-    const clamp = (n, min, max) => Math.min(max, Math.max(min, n));
     const applyVesselScale = () => {
-      vesselScale = clamp(vesselScale, 0.6, 2.0);
       vessel.style.setProperty("--v-scale", vesselScale);
-      try { localStorage.setItem(VESSEL_KEY, String(vesselScale)); } catch {}
+      try { localStorage.setItem(VESSEL_KEY, vesselScale); } catch {}
     };
     applyVesselScale();
 
-    // 連打クールダウン
     let cooldown = false;
     const withCooldown = (fn) => {
       if (cooldown) return;
       cooldown = true;
-      setTimeout(() => (cooldown = false), 800);
+      setTimeout(() => (cooldown = false), 100); // 0.1秒
       fn();
     };
 
-    // アニメ付与ユーティリティ
-    const pulse = (el, cls = "pressed", ms = 220) => {
+    const pulse = (el, cls="pressed", ms=200) => {
       el.classList.add(cls);
       setTimeout(() => el.classList.remove(cls), ms);
     };
 
-    // イライラ：増やす（器を大きく）
+    // イライラ → 器が小さくなる
     irairaBtn.addEventListener("click", () => withCooldown(() => {
       total++; today++;
       updateCounters();
@@ -99,26 +81,19 @@
         localStorage.setItem(TOTAL_KEY, total);
         localStorage.setItem(TODAY_KEY, today);
       } catch {}
-      vesselScale += 0.08; // 拡大ステップ
+      vesselScale -= 0.1; // 縮小
       applyVesselScale();
       pulse(irairaBtn);
-      pulse(vessel, "vessel-bounce", 260);
+      pulse(vessel, "vessel-bounce", 240);
     }));
 
-    // イライラしない：減らす（器を小さく）
+    // イライラしない → 器が大きくなる
     calmBtn.addEventListener("click", () => withCooldown(() => {
-      vesselScale -= 0.08; // 縮小ステップ
+      vesselScale += 0.1; // 拡大
       applyVesselScale();
       pulse(calmBtn);
-      pulse(vessel, "vessel-bounce", 260);
+      pulse(vessel, "vessel-bounce", 240);
     }));
-
-    // iOSのダブルタップ拡大防止（任意）
-    document.addEventListener("touchend", (e) => {
-      const now = Date.now();
-      if (document.lastTouch && now - document.lastTouch < 350) e.preventDefault();
-      document.lastTouch = now;
-    }, { passive: false });
   </script>
 </body>
 </html>
