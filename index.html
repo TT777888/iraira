@@ -15,9 +15,9 @@
       <p>あなたの今日: <span id="todayCount">0</span> 回</p>
     </div>
 
-    <!-- 器 -->
+    <!-- 器（SVG） -->
     <div class="vessel-wrap" aria-hidden="true">
-      <svg class="vessel" viewBox="0 0 200 140">
+      <svg class="vessel" viewBox="0 0 200 140" role="img" aria-label="器のイラスト">
         <ellipse cx="100" cy="130" rx="70" ry="8" class="v-shadow"></ellipse>
         <path class="v-body"
           d="M20,40 Q100,20 180,40 Q170,95 100,120 Q30,95 20,40 Z" />
@@ -26,54 +26,96 @@
     </div>
 
     <div class="buttons">
-      <button id="irairaButton" class="btn btn-pink">イライラ!!</button>
-      <button id="calmButton" class="btn btn-blue">イライラしない</button>
+      <button id="irairaButton" class="btn btn-pink" aria-label="イライラを放出">イライラ!!</button>
+      <button id="calmButton" class="btn btn-blue" aria-label="イライラしない">イライラしない</button>
     </div>
 
     <p class="note">※ 0.1 秒に 1 回だけ反応します</p>
   </div>
 
   <script>
+    // 要素
     const totalCountEl = document.getElementById("totalCount");
     const todayCountEl = document.getElementById("todayCount");
     const irairaBtn = document.getElementById("irairaButton");
     const calmBtn = document.getElementById("calmButton");
     const vessel = document.querySelector(".vessel");
 
+    // LocalStorage キー
     const TOTAL_KEY = "iraira_total";
     const TODAY_KEY = "iraira_today_" + new Date().toISOString().slice(0,10);
     const VESSEL_KEY = "iraira_vessel_scale";
 
+    // 状態
     let total = Number(localStorage.getItem(TOTAL_KEY) || 0);
     let today = Number(localStorage.getItem(TODAY_KEY) || 0);
     let vesselScale = Number(localStorage.getItem(VESSEL_KEY) || 1);
 
+    // 表示
     const updateCounters = () => {
       totalCountEl.textContent = total;
       todayCountEl.textContent = today;
     };
     updateCounters();
 
+    // 反転防止のための極小下限（0 は不可）
+    const EPS = 0.0001;
+
     const applyVesselScale = () => {
+      // 0 以下になるのを防止（反転対策）
+      if (vesselScale <= EPS) vesselScale = EPS;
       vessel.style.setProperty("--v-scale", vesselScale);
       try { localStorage.setItem(VESSEL_KEY, vesselScale); } catch {}
     };
     applyVesselScale();
 
+    // クールダウン（0.1s）
     let cooldown = false;
     const withCooldown = (fn) => {
       if (cooldown) return;
       cooldown = true;
-      setTimeout(() => (cooldown = false), 100); // 0.1秒
+      setTimeout(() => (cooldown = false), 100);
       fn();
     };
 
+    // 軽いエフェクト
     const pulse = (el, cls="pressed", ms=200) => {
       el.classList.add(cls);
       setTimeout(() => el.classList.remove(cls), ms);
     };
 
-    // イライラ → 器が小さくなる
+    // ---- 効果音：イラ！ ----
+    // Web Speech API（日本語音声があればそれを優先）
+    const playIra = () => {
+      try {
+        if ("speechSynthesis" in window) {
+          const u = new SpeechSynthesisUtterance("イラ！");
+          // 日本語ボイスがあれば選ぶ
+          const ja = speechSynthesis.getVoices().find(v => v.lang && v.lang.startsWith("ja"));
+          if (ja) u.voice = ja;
+          u.lang = "ja-JP";
+          u.rate = 1.0;
+          u.pitch = 1.0;
+          speechSynthesis.speak(u);
+          return;
+        }
+      } catch (_) {}
+      // フォールバック：短いビープ音（Web Audio）
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "square";
+        osc.frequency.value = 880; // A5
+        gain.gain.value = 0.05;
+        osc.connect(gain).connect(ctx.destination);
+        osc.start();
+        setTimeout(() => { osc.stop(); ctx.close(); }, 120);
+      } catch (_) {}
+    };
+
+    // クリック動作
+    // イライラ → 器を小さく（ただし 0 以下にならない）
     irairaBtn.addEventListener("click", () => withCooldown(() => {
       total++; today++;
       updateCounters();
@@ -81,19 +123,37 @@
         localStorage.setItem(TOTAL_KEY, total);
         localStorage.setItem(TODAY_KEY, today);
       } catch {}
-      vesselScale -= 0.1; // 縮小
+      vesselScale -= 0.1;           // 縮小
+      if (vesselScale <= EPS) {
+        // 下限到達時はわずかに弾むだけにして反転回避
+        vesselScale = EPS;
+      }
       applyVesselScale();
       pulse(irairaBtn);
       pulse(vessel, "vessel-bounce", 240);
+      // 効果音
+      playIra();
     }));
 
-    // イライラしない → 器が大きくなる
+    // イライラしない → 器を大きく（上限なし）
     calmBtn.addEventListener("click", () => withCooldown(() => {
-      vesselScale += 0.1; // 拡大
+      vesselScale += 0.1;           // 拡大（無制限）
       applyVesselScale();
       pulse(calmBtn);
       pulse(vessel, "vessel-bounce", 240);
     }));
+
+    // iOS ダブルタップ拡大防止（任意）
+    document.addEventListener("touchend", (e) => {
+      const now = Date.now();
+      if (document.lastTouch && now - document.lastTouch < 350) e.preventDefault();
+      document.lastTouch = now;
+    }, { passive: false });
+
+    // 一部ブラウザで音声ボイス一覧の遅延読み込みがあるため、1回トリガしておく（任意）
+    if ("speechSynthesis" in window) {
+      speechSynthesis.onvoiceschanged = () => {};
+    }
   </script>
 </body>
 </html>
